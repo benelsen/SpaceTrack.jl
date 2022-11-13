@@ -1,0 +1,7 @@
+name = "SpaceTrack"
+uuid = "0e676898-9a4e-418a-8860-bb3a442fc4e9"
+authors = ["Ben Elsen <mail@benelsen.com>"]
+version = "0.1.0"
+
+[compat]
+julia = "1.8.2"
