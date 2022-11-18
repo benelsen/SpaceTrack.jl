@@ -43,34 +43,47 @@ mutable struct State
     base_uri::String
 end
 
-const default_state = State(
-    nothing, 
-    [], 
-    Dict(
+const default_http_headers = Pair{String, String}[]
+const default_http_options = Dict(
         :retry => false,
         :keep_alive => true, # work-around for HTTP.jl not noticing when TLS connections are closed. space-track.org seems to nuke connections after 240s idle time.
         :connect_timeout => 30,
         :readtimeout => 120,
-    ), 
+)
+
+State() = State(
+    nothing, 
+    default_http_headers, 
+    copy(default_http_options), 
     HTTP.Cookies.CookieJar(), 
     false, 
     DEFAULT_BASE_URI,
 )
 
-function set_base_uri!(uri::String)
-    default_state.base_uri = uri
+const default_state = State()
+
+function reset!()
+    default_state.credentials = nothing
+    default_state.http_headers = default_http_headers
+    default_state.http_options = default_http_options
+    default_state.http_cookie_jar = HTTP.Cookies.CookieJar()
+    default_state.logged_in = false
+    default_state.base_uri = DEFAULT_BASE_URI
+    nothing
+end
+
+set_base_uri!(uri::String) = set_base_uri!(default_state, uri)
+function set_base_uri!(state::State, uri::String)
+    state.base_uri = uri
+    nothing
 end
 
 # Auth
 
-function set_credentials!(creds::Credentials)
-    default_state.credentials = creds
-end
-
-login!(username::String, password::String) = login!(default_state, username::String, password::String)
-function login!(state::State, username::String, password::String)
-    set_credentials!(Credentials(username, password))
-    login!(state)
+set_credentials!(creds::Credentials) = set_credentials!(default_state, creds)
+function set_credentials!(state::State, creds::Credentials)
+    state.credentials = creds
+    nothing
 end
 
 login!() = login!(default_state)
@@ -80,8 +93,9 @@ function login!(state::State)
         return throw(MissingCredentials())
     end
 
-    res = HTTP.request(:POST, state.base_uri * "/ajaxauth/login", 
-        [],
+    res = HTTP.request(:POST, 
+        state.base_uri * "/ajaxauth/login", 
+        state.http_headers,
         Dict(
             "identity" => state.credentials.username,
             "password" => state.credentials.password,
@@ -93,6 +107,28 @@ function login!(state::State)
 
     data = JSON3.read(res.body)
     state.logged_in = isempty(data)
+end
+
+login!(username::String, password::String) = login!(default_state, username, password)
+function login!(state::State, username::String, password::String)
+    set_credentials!(Credentials(username, password))
+    login!(state)
+end
+
+logout!() = logout!(default_state)
+function logout!(state::State)
+
+    res = HTTP.request(:GET, 
+        state.base_uri * "/ajaxauth/logout", 
+        state.http_headers;
+        cookies = true, cookiejar = state.http_cookie_jar,
+        status_exception = true,
+        state.http_options...,
+    )
+
+    state.logged_in = res.status != 200
+
+    return !state.logged_in
 end
 
 end
