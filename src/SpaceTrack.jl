@@ -98,7 +98,7 @@ function login!(state::State)
     end
 
     res = HTTP.request(:POST, 
-        URI(state.base_uri; path = "/ajaxauth/login"), 
+        joinpath(URI(state.base_uri), "/ajaxauth/login"),
         state.http_headers,
         Dict(
             "identity" => state.credentials.username,
@@ -123,7 +123,7 @@ logout!() = logout!(default_state)
 function logout!(state::State)
 
     res = HTTP.request(:GET, 
-        URI(state.base_uri; path = "/ajaxauth/logout"),
+        joinpath(URI(state.base_uri), "/ajaxauth/logout"),
         state.http_headers;
         cookies = true, cookiejar = state.http_cookie_jar,
         status_exception = true,
