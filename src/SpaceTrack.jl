@@ -30,6 +30,10 @@ struct InvalidRequest <: SpaceTrackError
     msg
 end
 
+struct FailedRequest <: SpaceTrackError
+    body
+end
+
 # Structs
 
 struct Credentials
@@ -192,5 +196,17 @@ function _get(state::State, controller::String, action::String, class::String, p
 
     return res
 end
+
+function get_raw(state::State, controller::String, action::String, class::String, predicates::Vector{Pair{String, String}})
+
+    response = _get(state, controller, action, class, predicates)
+
+    if response.status >= 400
+        throw(FailedRequest(String(response.body)))
+    end
+
+    String(response.body)
+end
+get_raw(controller::String, action::String, class::String, predicates::Vector{Pair{String, String}}) = get_raw(default_state, controller, action, class, predicates)
 
 end

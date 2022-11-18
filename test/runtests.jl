@@ -1,4 +1,4 @@
-using Test, URIs
+using Test, URIs, HTTP, JSON3
 if isinteractive()
     using Revise
 end
@@ -71,8 +71,21 @@ using SpaceTrack
         example_uri_expected = "https://www.space-track.org/basicspacedata/query/class/gp/EPOCH/%3E2022-11-15T01%3A23%3A45/OBJECT_NAME/%7E%7EUSA/orderby/EPOCH%20desc/limit/10/metadata/true/emptyresult/show"
         @test example_uri isa URI
         @test string(example_uri) == example_uri_expected
+
+        # TODO: Probably should think about mocking these requests and do a separate that the API still returns the expected schema
+        SpaceTrack.login!(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
+
+        http_response = SpaceTrack._get(SpaceTrack.default_state, "basicspacedata", "query", "announcement", ["format"=>"json"])
+        @test http_response isa HTTP.Response
+        @test http_response.status == 200
+        @test JSON3.read(http_response.body) isa AbstractArray # just to see if parsable JSON is returned
+
+        announcements_json = SpaceTrack.get_raw("basicspacedata", "query", "announcement", ["format"=>"json"])
+        @test !isempty(announcements_json)
+        @test JSON3.read(announcements_json) isa AbstractArray # just to see if parsable JSON is returned
+
+        SpaceTrack.logout!()
         
     end
     
 end
-
