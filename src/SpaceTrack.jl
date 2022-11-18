@@ -147,7 +147,7 @@ const valid_classes = Dict(
 )
 const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
 
-function validate_request(controller, action, class, predicates, format)
+function validate_request(controller::String, action::String, class::String, predicates::Vector{Pair{String, String}}, format::String)
 
     if controller ∉ valid_controllers
         throw(InvalidRequest("controller `$(controller)` not valid."))

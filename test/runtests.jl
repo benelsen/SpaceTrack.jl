@@ -6,57 +6,61 @@ using SpaceTrack
 
 ##
 
-@testset "Credentials" begin
+@testset "SpaceTrack.jl" begin
 
-    creds = SpaceTrack.Credentials(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
+    @testset "Credentials" begin
 
-    @test creds isa SpaceTrack.Credentials
+        creds = SpaceTrack.Credentials(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
 
-    io = IOBuffer()
-    show(io, creds)
-    @test String(take!(io)) == "Credentials()"
+        @test creds isa SpaceTrack.Credentials
 
-    @test isnothing(SpaceTrack.default_state.credentials)
-    @test_throws SpaceTrack.MissingCredentials SpaceTrack.login!()
+        io = IOBuffer()
+        show(io, creds)
+        @test String(take!(io)) == "Credentials()"
 
-    SpaceTrack.set_credentials!(creds)
-    @test SpaceTrack.default_state.credentials === creds
+        @test isnothing(SpaceTrack.default_state.credentials)
+        @test_throws SpaceTrack.MissingCredentials SpaceTrack.login!()
 
-end
+        SpaceTrack.set_credentials!(creds)
+        @test SpaceTrack.default_state.credentials === creds
 
-@testset "login/logout" begin
+    end
 
-    @test SpaceTrack.login!(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
-    @test SpaceTrack.default_state.logged_in
-    @test SpaceTrack.logout!()
-    @test !SpaceTrack.default_state.logged_in 
+    @testset "login/logout" begin
 
-    @test SpaceTrack.login!()
-    @test SpaceTrack.default_state.logged_in
-    @test SpaceTrack.logout!()
-    @test !SpaceTrack.default_state.logged_in
+        @test SpaceTrack.login!(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
+        @test SpaceTrack.default_state.logged_in
+        @test SpaceTrack.logout!()
+        @test !SpaceTrack.default_state.logged_in 
 
-end
+        @test SpaceTrack.login!()
+        @test SpaceTrack.default_state.logged_in
+        @test SpaceTrack.logout!()
+        @test !SpaceTrack.default_state.logged_in
 
-@testset "state" begin
+    end
 
-    SpaceTrack.set_base_uri!("https://for-testing-only.space-track.org")
-    @test SpaceTrack.default_state.base_uri === "https://for-testing-only.space-track.org"
+    @testset "state" begin
 
-    SpaceTrack.reset!()
-    @test SpaceTrack.default_state.base_uri === "https://www.space-track.org"
+        SpaceTrack.set_base_uri!("https://for-testing-only.space-track.org")
+        @test SpaceTrack.default_state.base_uri === "https://for-testing-only.space-track.org"
 
-    state = SpaceTrack.State()
-    @test state isa SpaceTrack.State
+        SpaceTrack.reset!()
+        @test SpaceTrack.default_state.base_uri === "https://www.space-track.org"
 
-end
+        state = SpaceTrack.State()
+        @test state isa SpaceTrack.State
 
-@testset "validation" begin
+    end
 
-    @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("invalidcontroller", "query", "gp", ["predicates"=>"object_id"], "json")
-    @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "invalidaction", "gp", ["predicates"=>"object_id"], "json")
-    @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "invalidclass", ["predicates"=>"object_id"], "json")
-    @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "gp", ["invalidpredicate"=>"false"], "json")
-    @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "gp", ["predicates"=>"object_id"], "invalidformat")
+    @testset "validation" begin
+
+        @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("invalidcontroller", "query", "gp", ["predicates"=>"object_id"], "json")
+        @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "invalidaction", "gp", ["predicates"=>"object_id"], "json")
+        @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "invalidclass", ["predicates"=>"object_id"], "json")
+        @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "gp", ["invalidpredicate"=>"false"], "json")
+        @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "gp", ["predicates"=>"object_id"], "invalidformat")
+        
+    end
     
 end
