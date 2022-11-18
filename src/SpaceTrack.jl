@@ -131,4 +131,49 @@ function logout!(state::State)
     return !state.logged_in
 end
 
+# Validation
+
+const valid_controllers = ("basicspacedata", "expandedspacedata", "fileshare", "combinedopsdata")
+const valid_actions = ("query", "modeldef")
+const valid_classes = Dict(
+    "basicspacedata" => ("announcement", "boxscore", "cdm_public", "decay", "gp", "gp_history", "launch_site", "omm", "satcat", "satcat_change", "satcat_debut", "tip", "tle", "tle_latest", "tle_publish"),
+    "publicfiles" => ("dirs", "getpublicdatafile", "loadpublicdata"),
+    "fileshare" => missing, # permission controlled, no idea what's valid
+    "combinedopsdata" => missing, # permission controlled, no idea what's valid
+)
+const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
+
+function validate_request(controller, action, class, predicates, format)
+
+    if controller ∉ valid_controllers
+        throw(InvalidRequest("controller `$(controller)` not valid."))
+    end
+    if action ∉ valid_actions
+        throw(InvalidRequest("action `$(action)` not valid."))
+    end
+    if ismissing(valid_classes[controller]) || class ∉ valid_classes[controller]
+        throw(InvalidRequest("class `$(class)` not valid with controller `$(controller)`."))
+    end
+
+    if any(first.(predicates) .∉ Ref(valid_predicates))
+        throw(InvalidRequest("one or more predicates is not valid."))
+    end
+
+    if format ∉ (:xml, :json, :html, :csv, :tle, Symbol("3le"), :kvn, :stream)
+        throw(InvalidRequest("format `$(format)` not valid."))
+    end
+
+    return true
+end
+
+
+    if any(first.(predicates) .∉ valid_predicates)
+
+    end
+
+    if format ∉ [:xml, :json, :html, :csv, :tle, Symbol("3le"), :kvn, :stream]
+        throw(InvalidRequest("format $(format) not valid."))
+    end
+
+end
 end
