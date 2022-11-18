@@ -177,4 +177,19 @@ function compose_uri(base_uri::String, controller::String, action::String, class
     return joinpath(URI(base_uri), controller, action, "class", class, predicates...)
 end
 
+function _get(state::State, controller::String, action::String, class::String, predicates::Vector{Pair{String, String}})
+    
+    uri = compose_uri(state.base_uri, controller, action, class, predicates)
+
+    res = HTTP.request(:GET,
+        uri,
+        state.http_headers;
+        cookies = true, cookiejar = state.http_cookie_jar,
+        status_exception = false,
+        state.http_options...
+    )
+
+    return res
+end
+
 end
