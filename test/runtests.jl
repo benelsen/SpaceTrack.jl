@@ -61,6 +61,8 @@ using SpaceTrack
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "gp", ["invalidpredicate"=>"false"], "json")
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "gp", ["predicates"=>"object_id"], "invalidformat")
         
+        @test SpaceTrack.validate_request("basicspacedata", "query", "gp", ["predicates"=>"object_id"], "json")
+        
     end
 
     @testset "requests" begin

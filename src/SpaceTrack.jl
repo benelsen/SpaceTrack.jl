@@ -146,6 +146,7 @@ const valid_classes = Dict(
     "combinedopsdata" => missing, # permission controlled, no idea what's valid
 )
 const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
+const valid_formats = ("xml", "json", "html", "csv", "tle", "3le", "kvn", "stream")
 
 function validate_request(controller::String, action::String, class::String, predicates::Vector{Pair{String, String}}, format::String)
 
@@ -163,7 +164,7 @@ function validate_request(controller::String, action::String, class::String, pre
         throw(InvalidRequest("one or more predicates is not valid."))
     end
 
-    if format ∉ (:xml, :json, :html, :csv, :tle, Symbol("3le"), :kvn, :stream)
+    if format ∉ valid_formats
         throw(InvalidRequest("format `$(format)` not valid."))
     end
 
