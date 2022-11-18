@@ -98,7 +98,7 @@ function login!(state::State)
     end
 
     res = HTTP.request(:POST, 
-        state.base_uri * "/ajaxauth/login", 
+        URI(state.base_uri; path = "/ajaxauth/login"), 
         state.http_headers,
         Dict(
             "identity" => state.credentials.username,
@@ -123,7 +123,7 @@ logout!() = logout!(default_state)
 function logout!(state::State)
 
     res = HTTP.request(:GET, 
-        state.base_uri * "/ajaxauth/logout", 
+        URI(state.base_uri; path = "/ajaxauth/logout"),
         state.http_headers;
         cookies = true, cookiejar = state.http_cookie_jar,
         status_exception = true,
@@ -168,6 +168,13 @@ function validate_request(controller::String, action::String, class::String, pre
     end
 
     return true
+end
+
+# Requests
+
+function compose_uri(base_uri::String, controller::String, action::String, class::String, predicates::Vector{Pair{String, String}})
+    predicates = escapepath.(first.(predicates)) .* "/" .* escapepath.(last.(predicates))
+    return joinpath(URI(base_uri), controller, action, "class", class, predicates...)
 end
 
 end

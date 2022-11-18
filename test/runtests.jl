@@ -1,4 +1,4 @@
-using Test
+using Test, URIs
 if isinteractive()
     using Revise
 end
@@ -53,7 +53,7 @@ using SpaceTrack
 
     end
 
-    @testset "validation" begin
+    @testset "request validation" begin
 
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("invalidcontroller", "query", "gp", ["predicates"=>"object_id"], "json")
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "invalidaction", "gp", ["predicates"=>"object_id"], "json")
@@ -62,5 +62,15 @@ using SpaceTrack
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query", "gp", ["predicates"=>"object_id"], "invalidformat")
         
     end
+
+    @testset "requests" begin
+        
+        example_uri = SpaceTrack.compose_uri("https://www.space-track.org", "basicspacedata", "query", "gp", ["EPOCH"=>">2022-11-15T01:23:45", "OBJECT_NAME"=>"~~USA", "orderby"=>"EPOCH desc", "limit"=>"10", "metadata"=>"true", "emptyresult"=>"show"])
+        example_uri_expected = "https://www.space-track.org/basicspacedata/query/class/gp/EPOCH/%3E2022-11-15T01%3A23%3A45/OBJECT_NAME/%7E%7EUSA/orderby/EPOCH%20desc/limit/10/metadata/true/emptyresult/show"
+        @test example_uri isa URI
+        @test string(example_uri) == example_uri_expected
+        
+    end
     
 end
+
