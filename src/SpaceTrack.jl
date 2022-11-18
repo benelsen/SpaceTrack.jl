@@ -26,6 +26,10 @@ abstract type SpaceTrackError <: Exception end
 struct MissingCredentials <: SpaceTrackError 
 end
 
+struct InvalidRequest <: SpaceTrackError
+    msg
+end
+
 # Structs
 
 struct Credentials
@@ -166,14 +170,4 @@ function validate_request(controller, action, class, predicates, format)
     return true
 end
 
-
-    if any(first.(predicates) .∉ valid_predicates)
-
-    end
-
-    if format ∉ [:xml, :json, :html, :csv, :tle, Symbol("3le"), :kvn, :stream]
-        throw(InvalidRequest("format $(format) not valid."))
-    end
-
-end
 end
