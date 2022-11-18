@@ -45,10 +45,10 @@ end
 
 const default_http_headers = Pair{String, String}[]
 const default_http_options = Dict(
-        :retry => false,
-        :keep_alive => true, # work-around for HTTP.jl not noticing when TLS connections are closed. space-track.org seems to nuke connections after 240s idle time.
-        :connect_timeout => 30,
-        :readtimeout => 120,
+    :retry => false,
+    :keep_alive => true, # work-around for HTTP.jl not noticing when TLS connections are closed. space-track.org seems to nuke connections after 240s idle time.
+    :connect_timeout => 30,
+    :readtimeout => 120,
 )
 
 State() = State(
