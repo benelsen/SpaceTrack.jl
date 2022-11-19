@@ -152,7 +152,7 @@ const valid_classes = Dict(
 const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
 const valid_formats = ("xml", "json", "html", "csv", "tle", "3le", "kvn", "stream")
 
-function validate_request(controller::String, action::String, class::String, predicates::Vector{Pair{String, String}}, format::String)
+function validate_request(controller::String, action::String, class::String, predicates::Dict{String, String}, format::Union{Nothing, String})
 
     if controller ∉ valid_controllers
         throw(InvalidRequest("controller `$(controller)` not valid."))
@@ -164,11 +164,11 @@ function validate_request(controller::String, action::String, class::String, pre
         throw(InvalidRequest("class `$(class)` not valid with controller `$(controller)`."))
     end
 
-    if any(first.(predicates) .∉ Ref(valid_predicates))
+    if any(keys(predicates) .∉ Ref(valid_predicates))
         throw(InvalidRequest("one or more predicates is not valid."))
     end
 
-    if format ∉ valid_formats
+    if !isnothing(format) && format ∉ valid_formats
         throw(InvalidRequest("format `$(format)` not valid."))
     end
 
@@ -177,12 +177,12 @@ end
 
 # Requests
 
-function compose_uri(base_uri::String, controller::String, action::String, class::String, predicates::Vector{Pair{String, String}})
-    predicates = escapepath.(first.(predicates)) .* "/" .* escapepath.(last.(predicates))
+function compose_uri(base_uri::String, controller::String, action::String, class::String, predicates::Dict{String, String})
+    predicates = escapepath.(keys(predicates)) .* "/" .* escapepath.(values(predicates))
     return joinpath(URI(base_uri), controller, action, "class", class, predicates...)
 end
 
-function _get(state::State, controller::String, action::String, class::String, predicates::Vector{Pair{String, String}})
+function _get(state::State, controller::String, action::String, class::String, predicates::Dict{String, String} = Dict{String, String}())
     
     uri = compose_uri(state.base_uri, controller, action, class, predicates)
 
@@ -197,16 +197,28 @@ function _get(state::State, controller::String, action::String, class::String, p
     return res
 end
 
-function get_raw(state::State, controller::String, action::String, class::String, predicates::Vector{Pair{String, String}})
+function get_raw(state::State, controller::String, action::String, class::String, predicates::Dict{String, String} = Dict{String, String}(); format = nothing, validate = true)
+
+    # kw format should overwrite predicate
+    if isnothing(format) && haskey(predicates, "format")
+        format = predicates["format"]
+        delete!(predicates, "format")
+    else
+        format = string(format)
+    end
+
+    if validate
+        validate_request(controller, action, class, predicates, format)
+    end
 
     response = _get(state, controller, action, class, predicates)
 
-    if response.status >= 400
+    if response.status >= 300
         throw(FailedRequest(String(response.body)))
     end
 
     String(response.body)
 end
-get_raw(controller::String, action::String, class::String, predicates::Vector{Pair{String, String}}) = get_raw(default_state, controller, action, class, predicates)
+get_raw(controller::String, action::String, class::String, predicates::Dict{String, String} = Dict{String, String}(); kwargs...) = get_raw(default_state, controller, action, class, predicates; kwargs...)
 
 end
