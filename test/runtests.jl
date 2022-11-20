@@ -6,6 +6,12 @@ using SpaceTrack
 
 ##
 
+if !haskey(ENV, "SPACETRACK_IDENTITY") || !haskey(ENV, "SPACETRACK_PASSWORD")
+    error("No credentials provided. Please set `SPACETRACK_IDENTITY` and `SPACETRACK_PASSWORD`")
+end
+
+##
+
 @testset "SpaceTrack.jl" begin
 
     @testset "Credentials" begin
