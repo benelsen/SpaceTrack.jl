@@ -14,7 +14,20 @@ end
 
 @testset "SpaceTrack.jl" begin
 
-    @testset "Credentials" begin
+    @testset "state" begin
+
+        SpaceTrack.reset!()
+        @test SpaceTrack.default_state.base_uri === "https://www.space-track.org"
+
+        SpaceTrack.set_base_uri!("https://for-testing-only.space-track.org")
+        @test SpaceTrack.default_state.base_uri === "https://for-testing-only.space-track.org"
+
+        state = SpaceTrack.State()
+        @test state isa SpaceTrack.State
+
+    end
+
+    @testset "credentials" begin
 
         creds = SpaceTrack.Credentials(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
 
@@ -46,25 +59,11 @@ end
 
     end
 
-    @testset "state" begin
-
-        SpaceTrack.set_base_uri!("https://for-testing-only.space-track.org")
-        @test SpaceTrack.default_state.base_uri === "https://for-testing-only.space-track.org"
-
-        SpaceTrack.reset!()
-        @test SpaceTrack.default_state.base_uri === "https://www.space-track.org"
-
-        state = SpaceTrack.State()
-        @test state isa SpaceTrack.State
-
-    end
-
     @testset "request validation" begin
 
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("invald",         "query",   "gp",      Dict("predicates" => "object_id"), "json")
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "invalid", "gp",      Dict("predicates" => "object_id"), "json")
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query",   "invalid", Dict("predicates" => "object_id"), "json")
-        @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query",   "gp",      Dict("invalid" => "false"),        "json")
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query",   "gp",      Dict("predicates" => "object_id"), "invalid")
         
         @test SpaceTrack.validate_request("basicspacedata", "query", "gp", Dict("predicates" => "object_id"), "json")
@@ -90,24 +89,25 @@ end
         # TODO: Probably should think about mocking these requests and do separate tests that the API still returns the expected schema
         SpaceTrack.login!(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
 
-        http_response = SpaceTrack._get(SpaceTrack.default_state, "basicspacedata", "query", "announcement", Dict("format"=>"json"))
+        http_response = SpaceTrack._get(SpaceTrack.default_state, "basicspacedata", "query", "satcat", Dict("limit"=>"3", "orderby"=>"object_number asc", "format"=>"json"))
         @test http_response isa HTTP.Response
         @test http_response.status == 200
         @test JSON3.read(http_response.body) isa AbstractArray # just to see if parsable JSON is returned
 
-        announcements_json = SpaceTrack.get_raw("basicspacedata", "query", "announcement", Dict("format"=>"xml"); format = "json")
-        @test !isempty(announcements_json)
-        @test JSON3.read(announcements_json) isa AbstractArray # just to see if parsable JSON is returned
+        satcat_json = SpaceTrack.get_raw("basicspacedata", "query", "satcat", Dict("limit"=>"3", "orderby"=>"object_number asc", "format"=>"xml"); format = "json")
+        @test !isempty(satcat_json)
+        @test JSON3.read(satcat_json) isa AbstractArray # just to see if parsable JSON is returned
 
-        announcements = SpaceTrack.get("basicspacedata", "query", "announcement")
-        @test announcements isa AbstractDict # TODO: change this once proper structs are implemented
-        @test announcements.data isa AbstractArray
+        satcat = SpaceTrack.get("basicspacedata", "query", "satcat", Dict("limit"=>"3", "orderby"=>"object_number asc"))
+        @test satcat isa AbstractDict # TODO: change this once proper structs are implemented
+        @test haskey(satcat, :data)
+        @test satcat.data isa AbstractArray
 
         SpaceTrack.logout!()
 
         # should fail because we're not logged in
-        @test_throws SpaceTrack.FailedRequest SpaceTrack.get_raw("basicspacedata", "query", "gp", Dict("format"=>"json", "limit"=>"3"))
-        @test_throws SpaceTrack.FailedRequest SpaceTrack.get("basicspacedata", "query", "gp")
+        @test_throws SpaceTrack.FailedRequest SpaceTrack.get_raw("basicspacedata", "query", "gp", Dict("format"=>"json", "limit"=>"3", "object_number"=>"25544"))
+        @test_throws SpaceTrack.FailedRequest SpaceTrack.get("basicspacedata", "query", "announcement")
         
     end
     

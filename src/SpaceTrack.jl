@@ -150,7 +150,7 @@ const valid_classes = Dict(
     "fileshare" => missing, # permission controlled, no idea what's valid
     "combinedopsdata" => missing, # permission controlled, no idea what's valid
 )
-const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
+# const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
 const valid_formats = ("xml", "json", "html", "csv", "tle", "3le", "kvn", "stream")
 
 function validate_request(controller::String, action::String, class::String, predicates::AbstractDict{String, String}, format::Union{Nothing, String})
@@ -158,15 +158,13 @@ function validate_request(controller::String, action::String, class::String, pre
     if controller ∉ valid_controllers
         throw(InvalidRequest("controller `$(controller)` not valid."))
     end
+    
     if action ∉ valid_actions
         throw(InvalidRequest("action `$(action)` not valid."))
     end
+
     if ismissing(valid_classes[controller]) || class ∉ valid_classes[controller]
         throw(InvalidRequest("class `$(class)` not valid with controller `$(controller)`."))
-    end
-
-    if any(keys(predicates) .∉ Ref(valid_predicates))
-        throw(InvalidRequest("one or more predicates is not valid."))
     end
 
     if !isnothing(format) && format ∉ valid_formats
