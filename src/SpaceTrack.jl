@@ -141,10 +141,11 @@ end
 
 # Validation
 
-const valid_controllers = ("basicspacedata", "expandedspacedata", "fileshare", "combinedopsdata")
+const valid_controllers = ("basicspacedata", "expandedspacedata", "publicfiles", "fileshare", "combinedopsdata")
 const valid_actions = ("query", "modeldef")
 const valid_classes = Dict(
     "basicspacedata" => ("announcement", "boxscore", "cdm_public", "decay", "gp", "gp_history", "launch_site", "omm", "satcat", "satcat_change", "satcat_debut", "tip", "tle", "tle_latest", "tle_publish"),
+    "expandedspacedata" => missing, # no idea what's valid
     "publicfiles" => ("dirs", "getpublicdatafile", "loadpublicdata"),
     "fileshare" => missing, # permission controlled, no idea what's valid
     "combinedopsdata" => missing, # permission controlled, no idea what's valid
@@ -191,7 +192,7 @@ function _get(state::State, controller::String, action::String, class::String, p
         state.http_headers;
         cookies = true, cookiejar = state.http_cookie_jar,
         status_exception = false,
-        state.http_options...
+        state.http_options...,
     )
 
     return res
@@ -203,7 +204,7 @@ function get_raw(state::State, controller::String, action::String, class::String
     if isnothing(format) && haskey(predicates, "format")
         format = predicates["format"]
         delete!(predicates, "format")
-    else
+    elseif !isnothing(format)
         format = string(format)
     end
 

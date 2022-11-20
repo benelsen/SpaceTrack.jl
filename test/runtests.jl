@@ -95,7 +95,7 @@ end
         @test http_response.status == 200
         @test JSON3.read(http_response.body) isa AbstractArray # just to see if parsable JSON is returned
 
-        announcements_json = SpaceTrack.get_raw("basicspacedata", "query", "announcement", Dict("format"=>"json"))
+        announcements_json = SpaceTrack.get_raw("basicspacedata", "query", "announcement", Dict("format"=>"xml"); format = "json")
         @test !isempty(announcements_json)
         @test JSON3.read(announcements_json) isa AbstractArray # just to see if parsable JSON is returned
 
@@ -104,6 +104,9 @@ end
         @test announcements.data isa AbstractArray
 
         SpaceTrack.logout!()
+
+        @test_throws SpaceTrack.FailedRequest SpaceTrack.get_raw("basicspacedata", "action", "class", Dict("format"=>"xml"); format = "json")
+        @test_throws SpaceTrack.FailedRequest SpaceTrack.get("basicspacedata", "action", "class")
         
     end
     
