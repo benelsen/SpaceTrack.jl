@@ -106,7 +106,7 @@ end
         SpaceTrack.logout!()
 
         # should fail because we're not logged in
-        @test_throws SpaceTrack.FailedRequest SpaceTrack.get_raw("basicspacedata", "query", "gp", Dict("format"=>"xml", "limit"=>"10"); format = "json")
+        @test_throws SpaceTrack.FailedRequest SpaceTrack.get_raw("basicspacedata", "query", "gp", Dict("format"=>"json", "limit"=>"3"))
         @test_throws SpaceTrack.FailedRequest SpaceTrack.get("basicspacedata", "query", "gp")
         
     end

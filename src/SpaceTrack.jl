@@ -206,7 +206,8 @@ function get_raw(state::State, controller::String, action::String, class::String
             format = predicates["format"]
         end
         delete!(predicates, "format")
-    elseif !isnothing(format)
+    end
+    if !isnothing(format)
         format = string(format)
     end
 
