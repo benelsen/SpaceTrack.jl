@@ -152,7 +152,7 @@ const valid_classes = Dict(
 const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
 const valid_formats = ("xml", "json", "html", "csv", "tle", "3le", "kvn", "stream")
 
-function validate_request(controller::String, action::String, class::String, predicates::Dict{String, String}, format::Union{Nothing, String})
+function validate_request(controller::String, action::String, class::String, predicates::AbstractDict{String, String}, format::Union{Nothing, String})
 
     if controller ∉ valid_controllers
         throw(InvalidRequest("controller `$(controller)` not valid."))
@@ -177,12 +177,12 @@ end
 
 # Requests
 
-function compose_uri(base_uri::String, controller::String, action::String, class::String, predicates::Dict{String, String})
+function compose_uri(base_uri::String, controller::String, action::String, class::String, predicates::AbstractDict{String, String})
     predicates = escapepath.(keys(predicates)) .* "/" .* escapepath.(values(predicates))
     return joinpath(URI(base_uri), controller, action, "class", class, predicates...)
 end
 
-function _get(state::State, controller::String, action::String, class::String, predicates::Dict{String, String} = Dict{String, String}())
+function _get(state::State, controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}())
     
     uri = compose_uri(state.base_uri, controller, action, class, predicates)
 
@@ -197,7 +197,7 @@ function _get(state::State, controller::String, action::String, class::String, p
     return res
 end
 
-function get_raw(state::State, controller::String, action::String, class::String, predicates::Dict{String, String} = Dict{String, String}(); format = nothing, validate = true)
+function get_raw(state::State, controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}(); format = nothing, validate = true)
 
     # kw format should overwrite predicate
     if isnothing(format) && haskey(predicates, "format")
@@ -219,6 +219,6 @@ function get_raw(state::State, controller::String, action::String, class::String
 
     String(response.body)
 end
-get_raw(controller::String, action::String, class::String, predicates::Dict{String, String} = Dict{String, String}(); kwargs...) = get_raw(default_state, controller, action, class, predicates; kwargs...)
+get_raw(controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}(); kwargs...) = get_raw(default_state, controller, action, class, predicates; kwargs...)
 
 end

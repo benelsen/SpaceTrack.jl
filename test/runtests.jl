@@ -1,4 +1,4 @@
-using Test, URIs, HTTP, JSON3
+using Test, URIs, HTTP, JSON3, OrderedCollections
 if isinteractive()
     using Revise
 end
@@ -70,7 +70,8 @@ using SpaceTrack
         @testset "compose_uri" begin
             uri_test_cases = [
                 ("https://www.space-track.org", "basicspacedata", "query", "gp", Dict("EPOCH"=>">2022-11-15T01:23:45")) => "https://www.space-track.org/basicspacedata/query/class/gp/EPOCH/%3E2022-11-15T01%3A23%3A45",
-                ("https://www.space-track.org", "basicspacedata", "query", "gp", Dict("object_id"=>"~~NAVSTAR")) => "https://www.space-track.org/basicspacedata/query/class/gp/object_id/%7E%7ENAVSTAR"
+                ("https://for-testing-only.space-track.org", "basicspacedata", "query", "gp", Dict("object_name"=>"~~NAVSTAR")) => "https://for-testing-only.space-track.org/basicspacedata/query/class/gp/object_name/%7E%7ENAVSTAR",
+                ("https://for-testing-only.space-track.org", "basicspacedata", "query", "satcat_debut", OrderedDict("object_name"=>"~~USA", "orderby"=>"launch desc", "DEBUT"=>"2022-01-01T00:00:00--2022-11-15T01:23:45", "object_number"=>"<>54220", "INTLDES"=>"^2022", "decay"=>"null-val", "limit"=>"5,5")) => "https://for-testing-only.space-track.org/basicspacedata/query/class/satcat_debut/object_name/%7E%7EUSA/orderby/launch%20desc/DEBUT/2022-01-01T00%3A00%3A00--2022-11-15T01%3A23%3A45/object_number/%3C%3E54220/INTLDES/%5E2022/decay/null-val/limit/5%2C5",
             ]
 
             for (args, expected_uri_string) ∈ uri_test_cases
