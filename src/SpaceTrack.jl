@@ -201,8 +201,10 @@ end
 function get_raw(state::State, controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}(); format = nothing, validate = true)
 
     # kw format should overwrite predicate
-    if isnothing(format) && haskey(predicates, "format")
-        format = predicates["format"]
+    if haskey(predicates, "format")
+        if isnothing(format)
+            format = predicates["format"]
+        end
         delete!(predicates, "format")
     elseif !isnothing(format)
         format = string(format)
