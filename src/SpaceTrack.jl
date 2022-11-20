@@ -221,4 +221,21 @@ function get_raw(state::State, controller::String, action::String, class::String
 end
 get_raw(controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}(); kwargs...) = get_raw(default_state, controller, action, class, predicates; kwargs...)
 
+function get(state::State, controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}())
+
+    validate_request(controller, action, class, predicates, "json")
+
+    filter!(kv -> first(kv) ∉ ("metadata", "showempty", "format"), predicates)
+    push!(predicates, "metadata" => "true", "emptyresult" => "show", "format" => "json")
+
+    response = _get(state, controller, action, class, predicates)
+
+    if response.status >= 300
+        throw(FailedRequest(JSON3.read(response.body)))
+    end
+
+    JSON3.read(response.body)
+end
+get(controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}(); kwargs...) = get(default_state, controller, action, class, predicates; kwargs...)
+
 end

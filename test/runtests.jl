@@ -99,6 +99,10 @@ end
         @test !isempty(announcements_json)
         @test JSON3.read(announcements_json) isa AbstractArray # just to see if parsable JSON is returned
 
+        announcements = SpaceTrack.get("basicspacedata", "query", "announcement")
+        @test announcements isa AbstractDict # TODO: change this once proper structs are implemented
+        @test announcements.data isa AbstractArray
+
         SpaceTrack.logout!()
         
     end
