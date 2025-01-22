@@ -22,11 +22,11 @@ end
 @testset "SpaceTrack.jl" begin
 
     @testset "Code quality (Aqua.jl)" begin
-        Aqua.test_all(Example20250122)
+        Aqua.test_all(SpaceTrack)
     end
 
     @testset "Code linting (JET.jl)" begin
-        JET.test_package(Example20250122; target_defined_modules = true)
+        JET.test_package(SpaceTrack; target_defined_modules = true)
     end
 
     @testset "state" begin
