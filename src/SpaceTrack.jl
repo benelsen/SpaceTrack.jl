@@ -24,11 +24,14 @@ const DEFAULT_BASE_URI = "https://www.space-track.org"
 
 abstract type SpaceTrackError <: Exception end
 
-struct MissingCredentials <: SpaceTrackError 
+struct MissingCredentialsError <: SpaceTrackError
 end
 
 struct InvalidRequest <: SpaceTrackError
     msg
+end
+
+struct MissingPermissions <: SpaceTrackError
 end
 
 struct FailedRequest <: SpaceTrackError
@@ -37,75 +40,82 @@ end
 
 # Structs
 
-struct Credentials
+# include("structs.jl")
+
+abstract type AbstractCredentials end
+
+struct NoCredentials <: AbstractCredentials
+end
+
+struct Credentials <: AbstractCredentials
     username::String
     password::String
 end
 Base.show(io::IO, ::Credentials) = print(io, "Credentials()")
 
 mutable struct State
-    credentials::Union{Credentials, Nothing}
+    credentials::AbstractCredentials
     http_headers::Vector{Pair{String, String}}
-    http_options::Dict{Symbol, Any}
+    http_options::NamedTuple
     http_cookie_jar::HTTP.Cookies.CookieJar
     logged_in::Bool
     base_uri::String
 end
 
 const default_http_headers = Pair{String, String}["User-Agent" => HTTP_USER_AGENT]
-const default_http_options = Dict(
-    :retry => false,
-    :keep_alive => true, # work-around for HTTP.jl not noticing when TLS connections are closed. space-track.org seems to nuke connections after 240s idle time.
-    :connect_timeout => 30,
-    :readtimeout => 120,
+const default_http_options = (
+    retry = false,
+    keep_alive = true, # work-around for HTTP.jl not noticing when TLS connections are closed. space-track.org seems to nuke connections after 240s idle time.
+    connect_timeout = 30,
+    readtimeout = 120,
 )
 
 State() = State(
-    nothing, 
-    default_http_headers, 
-    copy(default_http_options), 
-    HTTP.Cookies.CookieJar(), 
-    false, 
+    NoCredentials(),
+    default_http_headers,
+    default_http_options,
+    HTTP.Cookies.CookieJar(),
+    false,
     DEFAULT_BASE_URI,
 )
 
 const default_state = State()
 
-function reset!()
-    default_state.credentials = nothing
-    default_state.http_headers = default_http_headers
-    default_state.http_options = default_http_options
-    default_state.http_cookie_jar = HTTP.Cookies.CookieJar()
-    default_state.logged_in = false
-    default_state.base_uri = DEFAULT_BASE_URI
-    nothing
+reset!() = reset!(default_state)
+function reset!(state)
+    state.credentials = NoCredentials()
+    state.http_headers = default_http_headers
+    state.http_options = default_http_options
+    state.http_cookie_jar = HTTP.Cookies.CookieJar()
+    state.logged_in = false
+    state.base_uri = DEFAULT_BASE_URI
+    return state
 end
 
 set_base_uri!(uri::String) = set_base_uri!(default_state, uri)
 function set_base_uri!(state::State, uri::String)
     state.base_uri = uri
-    nothing
+    return nothing
 end
 
 # Auth
 
-set_credentials!(creds::Credentials) = set_credentials!(default_state, creds)
-function set_credentials!(state::State, creds::Credentials)
+set_credentials!(creds::AbstractCredentials) = set_credentials!(default_state, creds)
+function set_credentials!(state::State, creds::AbstractCredentials)
     state.credentials = creds
-    nothing
+    return nothing
 end
 
 login!() = login!(default_state)
 function login!(state::State)
-
-    if isnothing(state.credentials)
-        return throw(MissingCredentials())
+    if state.credentials isa NoCredentials
+        return throw(MissingCredentialsError())
     end
 
-    res = HTTP.request(:POST, 
+    res = HTTP.request(:POST,
         joinpath(URI(state.base_uri), "/ajaxauth/login"),
         state.http_headers,
-        Dict(
+        Dict{String, String}(
             "identity" => state.credentials.username,
             "password" => state.credentials.password,
         );
@@ -116,18 +126,19 @@ function login!(state::State)
 
     data = JSON3.read(res.body)
     state.logged_in = isempty(data)
+    return state.logged_in
 end
 
 login!(username::String, password::String) = login!(default_state, username, password)
 function login!(state::State, username::String, password::String)
     set_credentials!(Credentials(username, password))
-    login!(state)
+    return login!(state)
 end
 
 logout!() = logout!(default_state)
 function logout!(state::State)
 
-    res = HTTP.request(:GET, 
+    res = HTTP.request(:GET,
         joinpath(URI(state.base_uri), "/ajaxauth/logout"),
         state.http_headers;
         cookies = true, cookiejar = state.http_cookie_jar,
@@ -146,10 +157,10 @@ const valid_controllers = ("basicspacedata", "expandedspacedata", "publicfiles",
 const valid_actions = ("query", "modeldef")
 const valid_classes = Dict(
     "basicspacedata" => ("announcement", "boxscore", "cdm_public", "decay", "gp", "gp_history", "launch_site", "omm", "satcat", "satcat_change", "satcat_debut", "tip", "tle", "tle_latest", "tle_publish"),
-    "expandedspacedata" => missing, # no idea what's valid
+    "expandedspacedata" => (), # no idea what's valid
     "publicfiles" => ("dirs", "getpublicdatafile", "loadpublicdata"),
-    "fileshare" => missing, # permission controlled, no idea what's valid
-    "combinedopsdata" => missing, # permission controlled, no idea what's valid
+    "fileshare" => (), # permission controlled, no idea what's valid
+    "combinedopsdata" => (), # permission controlled, no idea what's valid
 )
 # const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
 const valid_formats = ("xml", "json", "html", "csv", "tle", "3le", "kvn", "stream")
@@ -159,12 +170,12 @@ function validate_request(controller::String, action::String, class::String, pre
     if controller ∉ valid_controllers
         throw(InvalidRequest("controller `$(controller)` not valid."))
     end
-    
+
     if action ∉ valid_actions
         throw(InvalidRequest("action `$(action)` not valid."))
     end
 
-    if ismissing(valid_classes[controller]) || class ∉ valid_classes[controller]
+    if isempty(valid_classes[controller]) || class ∉ valid_classes[controller]
         throw(InvalidRequest("class `$(class)` not valid with controller `$(controller)`."))
     end
 
@@ -183,7 +194,7 @@ function compose_uri(base_uri::String, controller::String, action::String, class
 end
 
 function _get(state::State, controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}())
-    
+
     uri = compose_uri(state.base_uri, controller, action, class, predicates)
 
     res = HTTP.request(:GET,

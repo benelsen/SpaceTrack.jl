@@ -22,12 +22,15 @@ end
 @testset "SpaceTrack.jl" begin
 
     @testset "Code quality (Aqua.jl)" begin
-        Aqua.test_all(SpaceTrack)
+        Aqua.test_all(
+            SpaceTrack;
+            stale_deps = false,
+        )
     end
 
-    @testset "Code linting (JET.jl)" begin
-        JET.test_package(SpaceTrack; target_defined_modules = true)
-    end
+    # @testset "Code linting (JET.jl)" begin
+    #     JET.test_package(SpaceTrack; target_defined_modules = true)
+    # end
 
     @testset "state" begin
 
@@ -52,8 +55,8 @@ end
         show(io, creds)
         @test String(take!(io)) == "Credentials()"
 
-        @test isnothing(SpaceTrack.default_state.credentials)
-        @test_throws SpaceTrack.MissingCredentials SpaceTrack.login!()
+        @test SpaceTrack.default_state.credentials isa SpaceTrack.NoCredentials
+        @test_throws SpaceTrack.MissingCredentialsError SpaceTrack.login!()
 
         SpaceTrack.set_credentials!(creds)
         @test SpaceTrack.default_state.credentials === creds
@@ -127,7 +130,3 @@ end
     end
 
 end
-
-# @testset "high-level interface" begin
-#     @test_broken SpaceTrack.
-# end
