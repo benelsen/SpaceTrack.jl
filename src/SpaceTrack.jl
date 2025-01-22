@@ -234,7 +234,7 @@ function get(state::State, controller::String, action::String, class::String, pr
     response = _get(state, controller, action, class, predicates)
 
     if response.status >= 300
-        throw(FailedRequest(JSON3.read(response.body)))
+        throw(FailedRequest(String(response.body)))
     end
 
     JSON3.read(response.body)
