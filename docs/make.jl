@@ -1,14 +1,14 @@
 using SpaceTrack
 using Documenter
 
-DocMeta.setdocmeta!(Example20250122, :DocTestSetup, :(using Example20250122); recursive=true)
+DocMeta.setdocmeta!(SpaceTrack, :DocTestSetup, :(using SpaceTrack); recursive=true)
 
 makedocs(
     modules=[SpaceTrack],
     authors="Ben Elsen <mail@benelsen.com>",
     sitename="SpaceTrack.jl",
     format=Documenter.HTML(;
-        canonical="https://benelsen.github.io/Example20250122.jl",
+        canonical="https://benelsen.github.io/SpaceTrack.jl",
         edit_link="main",
         assets=String[],
     ),
