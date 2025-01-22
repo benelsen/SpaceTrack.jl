@@ -26,13 +26,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     concurrency: 
       group: ${{ github.workflow }}
+    timeout-minutes: 60
+    permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
+      actions: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
-        julia-version:
-          # - "1.6"
+        version:
           - "1"
-        julia-arch:
+        arch:
           - x64
         os:
           - ubuntu-latest
@@ -43,8 +46,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: ${{ matrix.julia-version }}
-          arch: ${{ matrix.julia-arch }}
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
@@ -63,19 +66,30 @@ jobs:
     name: Documentation
     runs-on: ubuntu-latest
     permissions:
+      actions: write # needed to allow julia-actions/cache to proactively delete old caches that it has created
       contents: write
+      statuses: write
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1'
+      - uses: julia-actions/cache@v2
+      - name: Configure doc environment
+        shell: julia --project=docs --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-docdeploy@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
-          julia --project=docs -e '
-            using Documenter: DocMeta, doctest
-            using SpaceTrack
-            DocMeta.setdocmeta!(SpaceTrack, :DocTestSetup, :(using SpaceTrack); recursive=true)
-            doctest(SpaceTrack)'
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+      - name: Run doctests
+        shell: julia --project=docs --color=yes {0}
+        run: |
+          using Documenter: DocMeta, doctest
+          using SpaceTrack
+          DocMeta.setdocmeta!(SpaceTrack, :DocTestSetup, :(using SpaceTrack); recursive=true)
+          doctest(SpaceTrack)          
