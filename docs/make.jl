@@ -1,25 +1,21 @@
 using SpaceTrack
 using Documenter
 
-DocMeta.setdocmeta!(SpaceTrack, :DocTestSetup, :(using SpaceTrack); recursive=true)
-
-makedocs(;
+makedocs(
     modules=[SpaceTrack],
-    authors="Ben Elsen <mail@benelsen.com>",
-    repo="https://github.com/benelsen/SpaceTrack.jl/blob/{commit}{path}#{line}",
     sitename="SpaceTrack.jl",
     format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://benelsen.github.io/SpaceTrack.jl",
-        edit_link="main",
-        assets=String[],
+        edit_link=nothing,
     ),
     pages=[
         "Home" => "index.md",
     ],
 )
 
-deploydocs(;
-    repo="github.com/benelsen/SpaceTrack.jl",
-    devbranch="main",
+deploydocs(
+    repo = "github.com/benelsen/SpaceTrack.jl",
+    target = "build",
+    deps   = nothing,
+    make   = nothing,
+    push_preview = true,
 )

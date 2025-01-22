@@ -1,3 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 SpaceTrack = "0e676898-9a4e-418a-8860-bb3a442fc4e9"
+
+[compat]
+Documenter = "1"
