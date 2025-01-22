@@ -1,11 +1,16 @@
 using SpaceTrack
 using Documenter
 
+DocMeta.setdocmeta!(Example20250122, :DocTestSetup, :(using Example20250122); recursive=true)
+
 makedocs(
     modules=[SpaceTrack],
+    authors="Ben Elsen <mail@benelsen.com>",
     sitename="SpaceTrack.jl",
     format=Documenter.HTML(;
-        edit_link=nothing,
+        canonical="https://benelsen.github.io/Example20250122.jl",
+        edit_link="main",
+        assets=String[],
     ),
     pages=[
         "Home" => "index.md",
@@ -15,7 +20,5 @@ makedocs(
 deploydocs(
     repo = "github.com/benelsen/SpaceTrack.jl",
     target = "build",
-    deps   = nothing,
-    make   = nothing,
     push_preview = true,
 )

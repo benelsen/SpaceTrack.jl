@@ -1,4 +1,11 @@
-using Test, URIs, HTTP, JSON3, OrderedCollections
+using Test
+using Aqua
+using HTTP
+using JET
+using JSON3
+using OrderedCollections
+using URIs
+
 if isinteractive()
     using Revise
 end
@@ -13,6 +20,14 @@ end
 ##
 
 @testset "SpaceTrack.jl" begin
+
+    @testset "Code quality (Aqua.jl)" begin
+        Aqua.test_all(Example20250122)
+    end
+
+    @testset "Code linting (JET.jl)" begin
+        JET.test_package(Example20250122; target_defined_modules = true)
+    end
 
     @testset "state" begin
 
@@ -50,7 +65,7 @@ end
         @test SpaceTrack.login!(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
         @test SpaceTrack.default_state.logged_in
         @test SpaceTrack.logout!()
-        @test !SpaceTrack.default_state.logged_in 
+        @test !SpaceTrack.default_state.logged_in
 
         @test SpaceTrack.login!()
         @test SpaceTrack.default_state.logged_in
@@ -65,9 +80,9 @@ end
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "invalid", "gp",      Dict("predicates" => "object_id"), "json")
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query",   "invalid", Dict("predicates" => "object_id"), "json")
         @test_throws SpaceTrack.InvalidRequest SpaceTrack.validate_request("basicspacedata", "query",   "gp",      Dict("predicates" => "object_id"), "invalid")
-        
+
         @test SpaceTrack.validate_request("basicspacedata", "query", "gp", Dict("predicates" => "object_id"), "json")
-        
+
     end
 
     @testset "requests" begin
@@ -85,7 +100,7 @@ end
                 @test string(test_uri) == expected_uri_string
             end
         end
-        
+
         # TODO: Probably should think about mocking these requests and do separate tests that the API still returns the expected schema
         SpaceTrack.login!(ENV["SPACETRACK_IDENTITY"], ENV["SPACETRACK_PASSWORD"])
 
@@ -108,7 +123,11 @@ end
         # should fail because we're not logged in
         @test_throws SpaceTrack.FailedRequest SpaceTrack.get_raw("basicspacedata", "query", "gp", Dict("format"=>"json", "limit"=>"3", "object_number"=>"25544"))
         @test_throws SpaceTrack.FailedRequest SpaceTrack.get("basicspacedata", "query", "announcement")
-        
+
     end
-    
+
 end
+
+# @testset "high-level interface" begin
+#     @test_broken SpaceTrack.
+# end
