@@ -1,8 +1,12 @@
 module SpaceTrack
 
-using HTTP, URIs, Dates
+using HTTP
+using URIs
+using Dates
 
-import Pkg, StructTypes, JSON3
+import Pkg
+import StructTypes
+import JSON3
 
 let proj = Pkg.project(), deps = Pkg.dependencies()
     pkg_version = proj.version
@@ -13,9 +17,6 @@ let proj = Pkg.project(), deps = Pkg.dependencies()
     end
     global const HTTP_USER_AGENT = "SpaceTrack.jl/$pkg_version HTTP.jl/$http_version julia/$VERSION"
 end
-
-# bad idea? use header directly instead?
-HTTP.setuseragent!(HTTP_USER_AGENT)
 
 const DEFAULT_BASE_URI = "https://www.space-track.org"
 
@@ -51,7 +52,7 @@ mutable struct State
     base_uri::String
 end
 
-const default_http_headers = Pair{String, String}[]
+const default_http_headers = Pair{String, String}["User-Agent" => HTTP_USER_AGENT]
 const default_http_options = Dict(
     :retry => false,
     :keep_alive => true, # work-around for HTTP.jl not noticing when TLS connections are closed. space-track.org seems to nuke connections after 240s idle time.
