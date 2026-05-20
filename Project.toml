@@ -1,6 +1,6 @@
 name = "SpaceTrack"
 uuid = "0e676898-9a4e-418a-8860-bb3a442fc4e9"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Ben Elsen <mail@benelsen.com>"]
 
 [workspace]
