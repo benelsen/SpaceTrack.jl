@@ -4,20 +4,9 @@ using HTTP
 using URIs
 using Dates
 
-import Pkg
-import StructTypes
-import JSON3
+import JSON
 
-let proj = Pkg.project(), deps = Pkg.dependencies()
-    pkg_version = proj.version
-    http_version = try
-        deps[proj.dependencies["HTTP"]].version
-    catch
-        "missing"
-    end
-    global const HTTP_USER_AGENT = "SpaceTrack.jl/$pkg_version HTTP.jl/$http_version julia/$VERSION"
-end
-
+const HTTP_USER_AGENT = "SpaceTrack.jl"
 const DEFAULT_BASE_URI = "https://www.space-track.org"
 
 # Exceptions
@@ -124,7 +113,7 @@ function login!(state::State)
         state.http_options...,
     )
 
-    data = JSON3.read(res.body)
+    data = JSON.parse(res.body)
     state.logged_in = isempty(data)
     return state.logged_in
 end
@@ -147,7 +136,6 @@ function logout!(state::State)
     )
 
     state.logged_in = res.status != 200
-
     return !state.logged_in
 end
 
@@ -156,11 +144,11 @@ end
 const valid_controllers = ("basicspacedata", "expandedspacedata", "publicfiles", "fileshare", "combinedopsdata")
 const valid_actions = ("query", "modeldef")
 const valid_classes = Dict(
-    "basicspacedata" => ("announcement", "boxscore", "cdm_public", "decay", "gp", "gp_history", "launch_site", "omm", "satcat", "satcat_change", "satcat_debut", "tip", "tle", "tle_latest", "tle_publish"),
+    "basicspacedata"    => ("announcement", "boxscore", "cdm_public", "decay", "gp", "gp_history", "launch_site", "omm", "satcat", "satcat_change", "satcat_debut", "tip", "tle", "tle_latest", "tle_publish"),
+    "publicfiles"       => ("dirs", "getpublicdatafile", "loadpublicdata"),
     "expandedspacedata" => (), # no idea what's valid
-    "publicfiles" => ("dirs", "getpublicdatafile", "loadpublicdata"),
-    "fileshare" => (), # permission controlled, no idea what's valid
-    "combinedopsdata" => (), # permission controlled, no idea what's valid
+    "fileshare"         => (), # permission controlled, no idea what's valid
+    "combinedopsdata"   => (), # permission controlled, no idea what's valid
 )
 # const valid_predicates = ("predicates", "metadata", "limit", "orderby", "distinct", "format", "emptyresult", "favorites", "recursive")
 const valid_formats = ("xml", "json", "html", "csv", "tle", "3le", "kvn", "stream")
@@ -248,7 +236,7 @@ function get(state::State, controller::String, action::String, class::String, pr
         throw(FailedRequest(String(response.body)))
     end
 
-    JSON3.read(response.body)
+    JSON.parse(response.body)
 end
 get(controller::String, action::String, class::String, predicates::AbstractDict{String, String} = Dict{String, String}(); kwargs...) = get(default_state, controller, action, class, predicates; kwargs...)
 

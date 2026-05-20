@@ -1,8 +1,7 @@
 using Test
 using Aqua
 using HTTP
-using JET
-using JSON3
+using JSON
 using OrderedCollections
 using URIs
 
@@ -27,10 +26,6 @@ end
             stale_deps = false,
         )
     end
-
-    # @testset "Code linting (JET.jl)" begin
-    #     JET.test_package(SpaceTrack; target_defined_modules = true)
-    # end
 
     @testset "state" begin
 
@@ -110,11 +105,11 @@ end
         http_response = SpaceTrack._get(SpaceTrack.default_state, "basicspacedata", "query", "satcat", Dict("limit"=>"3", "orderby"=>"object_number asc", "format"=>"json"))
         @test http_response isa HTTP.Response
         @test http_response.status == 200
-        @test JSON3.read(http_response.body) isa AbstractArray # just to see if parsable JSON is returned
+        @test JSON.parse(http_response.body) isa AbstractArray # just to see if parsable JSON is returned
 
         satcat_json = SpaceTrack.get_raw("basicspacedata", "query", "satcat", Dict("limit"=>"3", "orderby"=>"object_number asc", "format"=>"xml"); format = "json")
         @test !isempty(satcat_json)
-        @test JSON3.read(satcat_json) isa AbstractArray # just to see if parsable JSON is returned
+        @test JSON.parse(satcat_json) isa AbstractArray # just to see if parsable JSON is returned
 
         satcat = SpaceTrack.get("basicspacedata", "query", "satcat", Dict("limit"=>"3", "orderby"=>"object_number asc"))
         @test satcat isa AbstractDict # TODO: change this once proper structs are implemented
