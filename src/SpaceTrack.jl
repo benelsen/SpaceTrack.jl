@@ -29,8 +29,6 @@ end
 
 # Structs
 
-# include("structs.jl")
-
 abstract type AbstractCredentials end
 
 struct NoCredentials <: AbstractCredentials
