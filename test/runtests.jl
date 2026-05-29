@@ -48,7 +48,7 @@ end
 
         io = IOBuffer()
         show(io, creds)
-        @test String(take!(io)) == "Credentials()"
+        @test String(take!(io)) == "Credentials(\"******\", \"******\")"
 
         @test SpaceTrack.default_state.credentials isa SpaceTrack.NoCredentials
         @test_throws SpaceTrack.MissingCredentialsError SpaceTrack.login!()
