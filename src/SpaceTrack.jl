@@ -38,7 +38,7 @@ struct Credentials <: AbstractCredentials
     username::String
     password::String
 end
-Base.show(io::IO, ::Credentials) = print(io, "Credentials()")
+Base.show(io::IO, ::Credentials) = print(io, "Credentials(\"******\", \"******\")")
 
 mutable struct State
     credentials::AbstractCredentials
